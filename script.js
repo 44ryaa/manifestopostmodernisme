@@ -11,6 +11,14 @@ let bgSynthNode = null;
 let ambientInterval = null;
 let isPlayingAudio = false;
 
+// Custom transmission variables
+let customDecryptionKey = null;
+let customDecryptionMessage = null;
+
+// Love Lasers variables
+let lasersList = [];
+let laserCooldown = 0;
+
 // Quotes for Astronaut
 const astroQuotes = [
   "Kamu itu mirip lubang hitam (black hole)... Soalnya seluruh atensiku ketarik ke kamu terus! 🕳️💖",
@@ -44,6 +52,11 @@ document.getElementById('anniversary-date').addEventListener('change', (e) => {
     updateTimer();
   }
 });
+
+// Run customizations and bindings
+setupPlanetCustomizer();
+setupMobileGameControls();
+parseSharedTransmission();
 
 // Switch Tabs
 function switchTab(tabId) {
@@ -178,6 +191,17 @@ function updateTimer() {
 setInterval(updateTimer, 1000);
 updateTimer();
 
+// iOS Safari Web Audio API Unlock mechanism
+function unlockAudioContext() {
+  initAudio();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+['click', 'touchstart'].forEach(type => {
+  window.addEventListener(type, unlockAudioContext, { once: true });
+});
+
 // =======================================================
 // LOVE RADAR CALCULATOR
 // =======================================================
@@ -303,7 +327,21 @@ function decryptMessage(e) {
   
   const validPasswords = ['sayang', 'nana', 'cinta', 'love', 'manis', 'ayang', 'pacar', 'cantik', 'chubby', 'gemes'];
   
-  if (validPasswords.includes(input)) {
+  let isCorrect = false;
+  let textToDisplay = letterText;
+
+  if (customDecryptionKey) {
+    if (input === customDecryptionKey) {
+      isCorrect = true;
+      textToDisplay = `TRANSMISI KHUSUS DEKRIPSI BERHASIL... 📡💚\n\n=========================================\nSENDER: PASANGAN SPESIALMU\nRECEIVER: BELAHAN JIWAKU\nSTATUS: TERKONEKSI PENUH\n=========================================\n\n${customDecryptionMessage}`;
+    }
+  } else {
+    if (validPasswords.includes(input)) {
+      isCorrect = true;
+    }
+  }
+  
+  if (isCorrect) {
     decrypting = true;
     form.style.display = 'none';
     output.classList.add('show');
@@ -320,8 +358,8 @@ function decryptMessage(e) {
     }, 100);
 
     function type() {
-      if (charIdx < letterText.length) {
-        const char = letterText.charAt(charIdx);
+      if (charIdx < textToDisplay.length) {
+        const char = textToDisplay.charAt(charIdx);
         output.innerHTML += char;
         
         // Soft keyboard tick sound occasionally
@@ -598,6 +636,8 @@ function initGame() {
   heartsList = [];
   asteroidsList = [];
   particlesList = [];
+  lasersList = [];
+  laserCooldown = 0;
   
   // Clear canvas
   gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
@@ -694,6 +734,49 @@ function updateGame() {
     });
   }
   
+  // Spawn Automatic Love Lasers
+  if (gameRunning) {
+    laserCooldown++;
+    if (laserCooldown >= 22) { // fire every ~0.36 seconds
+      laserCooldown = 0;
+      lasersList.push({
+        x: playerX,
+        y: gameCanvas.height - 35 - 12,
+        speed: 6,
+        size: 5
+      });
+      playSynthTone(550 + Math.random() * 150, 'sine', 0.03, 0.08);
+    }
+  }
+
+  // Update Lasers
+  lasersList.forEach((l, lIdx) => {
+    l.y -= l.speed;
+    
+    // Check Collision with Asteroids
+    asteroidsList.forEach((a, aIdx) => {
+      const distX = Math.abs(l.x - a.x);
+      const distY = Math.abs(l.y - a.y);
+      
+      if (distX < (a.size / 2 + l.size) && distY < (a.size / 2 + l.size)) {
+        lasersList.splice(lIdx, 1);
+        asteroidsList.splice(aIdx, 1);
+        gameScore += 5;
+        
+        // Blast sound
+        playSynthTone(220 + Math.random() * 110, 'triangle', 0.12, 0.15);
+        
+        // Spawn particles
+        spawnParticles(a.x, a.y, '#bd93f9');
+      }
+    });
+    
+    // Out of bounds
+    if (l.y < -10) {
+      lasersList.splice(lIdx, 1);
+    }
+  });
+
   // Update Hearts
   heartsList.forEach((h, hIdx) => {
     h.y += h.speed;
@@ -786,6 +869,11 @@ function drawGame() {
   // Draw Rocket (USS Bucin)
   drawRocket(playerX, gameCanvas.height - 35);
   
+  // Draw Lasers
+  lasersList.forEach(l => {
+    drawLaser(l.x, l.y, l.size);
+  });
+
   // Draw Hearts
   heartsList.forEach(h => {
     drawHeart(h.x, h.y, h.size);
@@ -945,3 +1033,298 @@ function drawAsteroid(x, y, size, rotation) {
 
   gameCtx.restore();
 }
+
+function drawLaser(x, y, size) {
+  gameCtx.save();
+  gameCtx.translate(x, y);
+  
+  // Glowing cyan energy orb
+  gameCtx.fillStyle = '#8be9fd';
+  gameCtx.shadowColor = '#8be9fd';
+  gameCtx.shadowBlur = 8;
+  gameCtx.beginPath();
+  gameCtx.arc(0, 0, size, 0, Math.PI * 2);
+  gameCtx.fill();
+  
+  gameCtx.restore();
+}
+
+// =======================================================
+// CUSTOM PLANET BUILDER & COLOR MAPS
+// =======================================================
+const colorPresets = {
+  pink: { color: '#d90368', light: '#ffb8d1', glow: 'rgba(217, 3, 104, 0.8)' },
+  blue: { color: '#0077b6', light: '#a1fffe', glow: 'rgba(0, 119, 182, 0.8)' },
+  purple: { color: '#8a2be2', light: '#d8b4fe', glow: 'rgba(138, 43, 226, 0.8)' },
+  green: { color: '#00f5d4', light: '#cafff0', glow: 'rgba(0, 245, 212, 0.8)' },
+  gold: { color: '#ff9f1c', light: '#ffdfa1', glow: 'rgba(255, 159, 28, 0.8)' }
+};
+
+function applyPlanetColor(planetNum, colorKey) {
+  const preset = colorPresets[colorKey];
+  if (!preset) return;
+  document.documentElement.style.setProperty(`--planet-${planetNum}-color`, preset.color);
+  document.documentElement.style.setProperty(`--planet-${planetNum}-light`, preset.light);
+  document.documentElement.style.setProperty(`--planet-${planetNum}-glow`, preset.glow);
+}
+
+function applyOrbitSpeed(speedVal) {
+  let speed1 = '7s';
+  let speed2 = '12s';
+  if (speedVal === 'slow') {
+    speed1 = '14s';
+    speed2 = '24s';
+  } else if (speedVal === 'fast') {
+    speed1 = '3.5s';
+    speed2 = '6s';
+  }
+  document.documentElement.style.setProperty('--orbit-1-speed', speed1);
+  document.documentElement.style.setProperty('--orbit-2-speed', speed2);
+}
+
+function updateOrbitText(name1, name2) {
+  const p1Label = document.getElementById('planet1-label');
+  const p2Label = document.getElementById('planet2-label');
+  if (p1Label) p1Label.innerText = name1;
+  if (p2Label) p2Label.innerText = name2;
+}
+
+function setupPlanetCustomizer() {
+  const customizerToggle = document.getElementById('customizerToggle');
+  const customizerBox = document.getElementById('customizerBox');
+  if (customizerToggle && customizerBox) {
+    customizerToggle.addEventListener('click', () => {
+      customizerBox.classList.toggle('open');
+      playSynthTone(400, 'sine', 0.05, 0.1);
+    });
+  }
+
+  // Bind Name Input
+  const p1Input = document.getElementById('planet1Name');
+  const p2Input = document.getElementById('planet2Name');
+  const p1Planet = document.getElementById('orbitPlanet1');
+  const p2Planet = document.getElementById('orbitPlanet2');
+
+  const savedP1Name = localStorage.getItem('planet1_name') || 'Kamu';
+  const savedP2Name = localStorage.getItem('planet2_name') || 'Aku';
+
+  if (p1Input && p2Input) {
+    p1Input.value = savedP1Name;
+    p2Input.value = savedP2Name;
+    if (p1Planet) p1Planet.setAttribute('title', savedP1Name);
+    if (p2Planet) p2Planet.setAttribute('title', savedP2Name);
+    updateOrbitText(savedP1Name, savedP2Name);
+
+    p1Input.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || 'Kamu';
+      if (p1Planet) p1Planet.setAttribute('title', val);
+      localStorage.setItem('planet1_name', val);
+      updateOrbitText(val, p2Input.value.trim() || 'Aku');
+    });
+
+    p2Input.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || 'Aku';
+      if (p2Planet) p2Planet.setAttribute('title', val);
+      localStorage.setItem('planet2_name', val);
+      updateOrbitText(p1Input.value.trim() || 'Kamu', val);
+    });
+  }
+
+  // Setup Presets
+  const setupPresets = (planetNum) => {
+    const container = document.getElementById(`planet${planetNum}Presets`);
+    if (!container) return;
+    const dots = container.querySelectorAll('.color-preset-dot');
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        dots.forEach(d => d.classList.remove('selected'));
+        dot.classList.add('selected');
+        const colorKey = dot.getAttribute('data-color');
+        applyPlanetColor(planetNum, colorKey);
+        localStorage.setItem(`planet${planetNum}_color`, colorKey);
+        playSynthTone(500 + (planetNum * 100), 'sine', 0.05, 0.15);
+      });
+    });
+  };
+  setupPresets(1);
+  setupPresets(2);
+
+  // Bind Speed Select
+  const speedSelect = document.getElementById('orbitSpeedSelect');
+  if (speedSelect) {
+    speedSelect.addEventListener('change', (e) => {
+      applyOrbitSpeed(e.target.value);
+      localStorage.setItem('orbit_speed', e.target.value);
+      playSynthTone(440, 'sine', 0.05, 0.15);
+    });
+  }
+
+  // Load Saved customizations
+  const savedP1Color = localStorage.getItem('planet1_color') || 'pink';
+  const savedP2Color = localStorage.getItem('planet2_color') || 'blue';
+  applyPlanetColor(1, savedP1Color);
+  applyPlanetColor(2, savedP2Color);
+
+  const selectPresetDot = (planetNum, colorKey) => {
+    const dots = document.querySelectorAll(`#planet${planetNum}Presets .color-preset-dot`);
+    dots.forEach(dot => {
+      if (dot.getAttribute('data-color') === colorKey) dot.classList.add('selected');
+      else dot.classList.remove('selected');
+    });
+  };
+  selectPresetDot(1, savedP1Color);
+  selectPresetDot(2, savedP2Color);
+
+  const savedSpeed = localStorage.getItem('orbit_speed') || 'medium';
+  if (speedSelect) speedSelect.value = savedSpeed;
+  applyOrbitSpeed(savedSpeed);
+}
+
+// =======================================================
+// CONSOLE MULTI-MODE & ENCRYPTION TERMINAL
+// =======================================================
+function switchConsoleMode(mode) {
+  const btnDecrypt = document.getElementById('btnConsoleDecrypt');
+  const btnEncrypt = document.getElementById('btnConsoleEncrypt');
+  const decryptContent = document.getElementById('consoleDecryptContent');
+  const encryptContent = document.getElementById('consoleEncryptContent');
+
+  if (!btnDecrypt || !btnEncrypt || !decryptContent || !encryptContent) return;
+
+  playSynthTone(500, 'sine', 0.05, 0.1);
+
+  if (mode === 'decrypt') {
+    btnDecrypt.classList.add('active');
+    btnEncrypt.classList.remove('active');
+    decryptContent.style.display = 'flex';
+    encryptContent.style.display = 'none';
+  } else {
+    btnDecrypt.classList.remove('active');
+    btnEncrypt.classList.add('active');
+    decryptContent.style.display = 'none';
+    encryptContent.style.display = 'flex';
+  }
+}
+
+function generateSecretTransmission() {
+  const passInput = document.getElementById('encryptPass');
+  const msgInput = document.getElementById('encryptMsg');
+  const resultLine = document.getElementById('encryptResultLine');
+
+  if (!passInput || !msgInput || !resultLine) return;
+
+  const pass = passInput.value.trim().toLowerCase();
+  const msg = msgInput.value.trim();
+
+  if (!pass || !msg) {
+    alert("Silakan tentukan kata sandi dan tulis pesan rahasia kamu!");
+    return;
+  }
+
+  // Format key|msg
+  const combined = pass + "|" + msg;
+  const encoded = btoa(encodeURIComponent(combined));
+  const link = window.location.origin + window.location.pathname + "?t=" + encoded;
+
+  resultLine.style.display = 'block';
+  resultLine.innerHTML = `
+    <span style="color:#50fa7b;">SYSTEM: Pesan berhasil dienkripsi! Tautan Anda:</span><br>
+    <div style="background:rgba(0,0,0,0.5); padding:8px; border-radius:8px; margin:6px 0; font-size:0.75rem; word-break:break-all; border:1px solid var(--neon-purple);">${link}</div>
+    <button class="decrypt-btn" style="margin-top:5px; padding:6px 12px; font-size:0.75rem;" onclick="copyLinkToClipboard('${link}')">Salin Tautan 📋</button>
+  `;
+  playSynthTone(880, 'sine', 0.1, 0.3);
+}
+
+function copyLinkToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Tautan berhasil disalin ke clipboard! Kirimkan ke pacarmu. 🚀🔗");
+  }).catch(() => {
+    const dummy = document.createElement('textarea');
+    document.body.appendChild(dummy);
+    dummy.value = text;
+    dummy.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummy);
+    alert("Tautan berhasil disalin! Kirimkan ke pacarmu. 🚀🔗");
+  });
+}
+
+function parseSharedTransmission() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const tParam = urlParams.get('t');
+  if (!tParam) return;
+
+  try {
+    const decoded = decodeURIComponent(atob(tParam));
+    const separatorIdx = decoded.indexOf('|');
+    if (separatorIdx > 0) {
+      customDecryptionKey = decoded.substring(0, separatorIdx).trim().toLowerCase();
+      customDecryptionMessage = decoded.substring(separatorIdx + 1);
+
+      // Update terminal cues
+      const hint = document.getElementById('consoleHint');
+      const sysLine = document.getElementById('consoleSystemLine');
+      const notif = document.getElementById('consoleNotification');
+
+      if (hint) hint.innerHTML = "Petunjuk: Masukkan kata sandi rahasia yang dibuat oleh pengirim pesan.";
+      if (sysLine) sysLine.innerHTML = "SYSTEM: Mendeteksi transmisi rahasia kustom dari seseorang...";
+      if (notif) notif.innerHTML = "SYSTEM: Diperlukan kata sandi dekripsi kustom.";
+
+      // Smooth switch tab to secret transmission
+      setTimeout(() => {
+        switchTab('secret');
+      }, 1000);
+    }
+  } catch (err) {
+    console.error("Gagal mendecode pesan kustom:", err);
+  }
+}
+
+// =======================================================
+// MOBILE VIRTUAL GAME CONTROLS BINDING
+// =======================================================
+function setupMobileGameControls() {
+  const btnLeft = document.getElementById('btnLeft');
+  const btnRight = document.getElementById('btnRight');
+  
+  if (!btnLeft || !btnRight) return;
+  
+  // Left Button
+  btnLeft.addEventListener('touchstart', (e) => {
+    keyLeft = true;
+    e.preventDefault();
+  }, { passive: false });
+  btnLeft.addEventListener('touchend', (e) => {
+    keyLeft = false;
+    e.preventDefault();
+  }, { passive: false });
+  btnLeft.addEventListener('mousedown', (e) => {
+    keyLeft = true;
+  });
+  btnLeft.addEventListener('mouseup', (e) => {
+    keyLeft = false;
+  });
+  btnLeft.addEventListener('mouseleave', (e) => {
+    keyLeft = false;
+  });
+  
+  // Right Button
+  btnRight.addEventListener('touchstart', (e) => {
+    keyRight = true;
+    e.preventDefault();
+  }, { passive: false });
+  btnRight.addEventListener('touchend', (e) => {
+    keyRight = false;
+    e.preventDefault();
+  }, { passive: false });
+  btnRight.addEventListener('mousedown', (e) => {
+    keyRight = true;
+  });
+  btnRight.addEventListener('mouseup', (e) => {
+    keyRight = false;
+  });
+  btnRight.addEventListener('mouseleave', (e) => {
+    keyRight = false;
+  });
+}
+

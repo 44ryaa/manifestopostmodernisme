@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Stasiun Cinta Luar Angkasa - Rayakan hubungan cinta Anda dengan pencatat waktu jadian, radar cinta gravitasi, transmisi rahasia terenkripsi, dan game arkade USS Bucin.">
   <title>Stasiun Cinta Luar Angkasa 🚀✨</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -56,10 +59,10 @@
         <div class="orbit-showcase">
           <div class="sun"></div>
           <div class="planet-orbit-line orbit-1">
-            <div class="planet planet-pink" title="Kamu"></div>
+            <div class="planet planet-pink" id="orbitPlanet1" title="Kamu"></div>
           </div>
           <div class="planet-orbit-line orbit-2">
-            <div class="planet planet-blue" title="Aku"></div>
+            <div class="planet planet-blue" id="orbitPlanet2" title="Aku"></div>
           </div>
         </div>
         
@@ -83,8 +86,53 @@
           </div>
         </div>
 
+        <!-- Orbit Customization Accordion -->
+        <div class="customizer-box" id="customizerBox">
+          <button class="customizer-toggle-btn" id="customizerToggle" type="button">
+            Kustomisasi Planet Orbit Kita 🪐 ⚙️
+          </button>
+          <div class="customizer-content" id="customizerContent">
+            <div class="customizer-row">
+              <div class="customizer-col">
+                <label for="planet1Name">Nama Planet 1 (Kamu):</label>
+                <input type="text" id="planet1Name" class="customizer-input" placeholder="Kamu" autocomplete="off">
+                <label>Warna Planet 1:</label>
+                <div class="color-presets" id="planet1Presets">
+                  <div class="color-preset-dot selected" data-color="pink" style="background: #d90368; color: #d90368;" title="Pink Nebula"></div>
+                  <div class="color-preset-dot" data-color="blue" style="background: #0077b6; color: #0077b6;" title="Andromeda Blue"></div>
+                  <div class="color-preset-dot" data-color="purple" style="background: #8a2be2; color: #8a2be2;" title="Supernova Violet"></div>
+                  <div class="color-preset-dot" data-color="green" style="background: #00f5d4; color: #00f5d4;" title="Aurora Emerald"></div>
+                  <div class="color-preset-dot" data-color="gold" style="background: #ff9f1c; color: #ff9f1c;" title="Starlight Gold"></div>
+                </div>
+              </div>
+              <div class="customizer-col">
+                <label for="planet2Name">Nama Planet 2 (Pacar):</label>
+                <input type="text" id="planet2Name" class="customizer-input" placeholder="Aku" autocomplete="off">
+                <label>Warna Planet 2:</label>
+                <div class="color-presets" id="planet2Presets">
+                  <div class="color-preset-dot" data-color="pink" style="background: #d90368; color: #d90368;" title="Pink Nebula"></div>
+                  <div class="color-preset-dot selected" data-color="blue" style="background: #0077b6; color: #0077b6;" title="Andromeda Blue"></div>
+                  <div class="color-preset-dot" data-color="purple" style="background: #8a2be2; color: #8a2be2;" title="Supernova Violet"></div>
+                  <div class="color-preset-dot" data-color="green" style="background: #00f5d4; color: #00f5d4;" title="Aurora Emerald"></div>
+                  <div class="color-preset-dot" data-color="gold" style="background: #ff9f1c; color: #ff9f1c;" title="Starlight Gold"></div>
+                </div>
+              </div>
+            </div>
+            <div class="customizer-row" style="margin-top: 12px;">
+              <div class="customizer-col" style="flex: 1;">
+                <label for="orbitSpeedSelect">Kecepatan Orbit:</label>
+                <select id="orbitSpeedSelect" class="customizer-select">
+                  <option value="slow">Lambat (Tenang & Romantis)</option>
+                  <option value="medium" selected>Sedang (Harmonis)</option>
+                  <option value="fast">Cepat (Penuh Energi Cinta)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="orbit-text">
-          Sudah <span id="days-summary">0</span> hari kita mengorbit bersama di alam semesta ini.<br>
+          Sudah <span id="days-summary">0</span> hari <strong id="planet1-label" style="color:var(--planet-1-light, #ffb8d1);">Kamu</strong> & <strong id="planet2-label" style="color:var(--planet-2-light, #a1fffe);">Aku</strong> mengorbit bersama di alam semesta ini.<br>
           Atur ulang tanggal jadian kita di bawah ini jika berubah:<br>
           <input type="date" id="anniversary-date" style="margin-top:10px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--neon-pink); background: rgba(0,0,0,0.5); color: #fff; outline:none; text-align:center;">
         </div>
@@ -121,21 +169,49 @@
               <span class="console-dot dot-yellow"></span>
               <span class="console-dot dot-green"></span>
             </div>
-            <div class="console-title">Love Decryption Terminal</div>
+            <div class="console-title" id="consoleTitle">Love Decryption Terminal</div>
             <div></div>
           </div>
           
+          <!-- Sub tab console -->
+          <div class="console-nav">
+            <button class="console-nav-btn active" id="btnConsoleDecrypt" onclick="switchConsoleMode('decrypt')" type="button">Dekripsi</button>
+            <button class="console-nav-btn" id="btnConsoleEncrypt" onclick="switchConsoleMode('encrypt')" type="button">Buat Transmisi</button>
+          </div>
+          
           <div class="console-body" id="consoleBody">
-            <div class="console-line">SYSTEM: Mendeteksi transmisi rahasia terenkripsi dari satelit...</div>
-            <div class="console-line" style="color: #ff5555;">SYSTEM: Diperlukan kata sandi dekripsi.</div>
-            <div class="console-line" style="color: #a9b1d6; font-style: italic;">Petunjuk: Panggilan sayang kamu ke pacar (contoh: sayang, nana, manis).</div>
-            
-            <form class="decryption-form" onsubmit="decryptMessage(event)" id="decryptForm">
-              <input type="text" id="decryptPass" class="decrypt-input" placeholder="Masukkan kata sandi..." autocomplete="off">
-              <button type="submit" class="decrypt-btn">DEKRIPSI</button>
-            </form>
+            <!-- DECRYPT CONTENT -->
+            <div id="consoleDecryptContent" style="display:flex; flex-direction:column; gap:15px; width:100%;">
+              <div class="console-line" id="consoleSystemLine">SYSTEM: Mendeteksi transmisi rahasia terenkripsi dari satelit...</div>
+              <div class="console-line" id="consoleNotification" style="color: #ff5555;">SYSTEM: Diperlukan kata sandi dekripsi.</div>
+              <div class="console-line" id="consoleHint" style="color: #a9b1d6; font-style: italic;">Petunjuk: Panggilan sayang kamu ke pacar (contoh: sayang, nana, manis).</div>
+              
+              <form class="decryption-form" onsubmit="decryptMessage(event)" id="decryptForm">
+                <input type="text" id="decryptPass" class="decrypt-input" placeholder="Masukkan kata sandi..." autocomplete="off">
+                <button type="submit" class="decrypt-btn">DEKRIPSI</button>
+              </form>
 
-            <div class="console-output" id="consoleOutput"></div>
+              <div class="console-output" id="consoleOutput"></div>
+            </div>
+
+            <!-- ENCRYPT CONTENT -->
+            <div id="consoleEncryptContent" style="display:none; flex-direction:column; gap:15px; width:100%;">
+              <div class="console-line">SYSTEM: Inisialisasi enkripsi transmisi cinta kosmik...</div>
+              
+              <div class="input-group-console">
+                <label for="encryptPass">1. Tentukan Kata Sandi Dekripsi:</label>
+                <input type="text" id="encryptPass" class="console-input-text" placeholder="Contoh: sayang, manis, gemes..." autocomplete="off">
+              </div>
+
+              <div class="input-group-console">
+                <label for="encryptMsg">2. Tulis Pesan Cinta Rahasiamu:</label>
+                <textarea id="encryptMsg" class="console-textarea" placeholder="Tulis sesuatu yang romantis untuk pacarmu..."></textarea>
+              </div>
+
+              <button class="encrypt-btn" type="button" onclick="generateSecretTransmission()">Enkripsi & Salin Tautan</button>
+              
+              <div class="console-line" id="encryptResultLine" style="color: #8be9fd; word-break: break-all; margin-top:10px; display:none;"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -146,13 +222,19 @@
           <!-- Game Canvas -->
           <canvas id="gameCanvas" width="480" height="300"></canvas>
           
+          <!-- Mobile Tactile Virtual Controls -->
+          <div class="mobile-controls" id="mobileControls">
+            <button class="mobile-ctrl-btn ctrl-left" id="btnLeft" type="button">◀</button>
+            <button class="mobile-ctrl-btn ctrl-right" id="btnRight" type="button">▶</button>
+          </div>
+          
           <!-- Start / Game Over Screen Overlay -->
           <div class="game-overlay" id="gameOverlay">
             <h3 id="overlayTitle">USS Bucin Arcade 🚀</h3>
             <p id="overlayDesc">
               Kemudikan pesawat cintamu! Tangkap bintang hati (💖) sebanyak-banyaknya.<br>
-              Hindari asteroid batu (🪨) yang mengganggu jalinan asmara.<br>
-              Gunakan panah kiri/kanan, klik/sentuh layar, atau geser mouse.
+              Tembak asteroid (🪨) dengan Laser Cinta otomatis.<br>
+              Gunakan virtual tombol di bawah, panah keyboard, atau geser mouse/layar.
             </p>
             <button class="start-game-btn" onclick="startGame()">Mulai Terbang!</button>
           </div>
