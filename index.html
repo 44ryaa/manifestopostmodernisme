@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stasiun Cinta Luar Angkasa 🚀✨</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Starfield Canvas Background -->
+  <canvas id="starCanvas"></canvas>
+
+  <!-- Audio Toggle Control Button -->
+  <div class="audio-ctrl" id="audioBtn" title="Nyalakan Musik Synth Cinta">
+    <svg viewBox="0 0 24 24" id="audioIcon">
+      <!-- Mute Icon initially -->
+      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-8 5.77H2v6h4l5 5V4L6 9z"/>
+    </svg>
+  </div>
+
+  <!-- Header -->
+  <header class="main-header">
+    <h1>COSMIC LOVE STATION</h1>
+    <p>Orbit Koordinat Hatiku 💖</p>
+  </header>
+
+  <!-- Main Glassmorphism Card Container -->
+  <main class="glass-container">
+    
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('orbit')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" stroke="currentColor" stroke-width="2" fill="none"/><ellipse cx="12" cy="12" rx="10" ry="3" stroke="currentColor" stroke-width="2" fill="none" transform="rotate(-15 12 12)"/></svg>
+        <span>Orbit Kita</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('radar')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/><line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" stroke-width="2"/><line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+        <span>Radar Cinta</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('secret')">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        <span>Transmisi</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('arcade')">
+        <svg viewBox="0 0 24 24"><path d="M12 2s4 4 4 10H8c0-6 4-10 4-10z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8 12v6l-4 2v-3" stroke="currentColor" stroke-width="2" fill="none"/><path d="M16 12v6l4 2v-3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        <span>Love Rocket</span>
+      </button>
+    </nav>
+
+    <!-- Tab Content Panels -->
+    <div class="tab-content">
+
+      <!-- PANEL 1: ORBIT KITA -->
+      <section class="panel active" id="panel-orbit">
+        <div class="orbit-showcase">
+          <div class="sun"></div>
+          <div class="planet-orbit-line orbit-1">
+            <div class="planet planet-pink" title="Kamu"></div>
+          </div>
+          <div class="planet-orbit-line orbit-2">
+            <div class="planet planet-blue" title="Aku"></div>
+          </div>
+        </div>
+        
+        <!-- Timer Countdown -->
+        <div class="countdown-box">
+          <div class="time-segment">
+            <div class="time-value" id="val-days">0</div>
+            <div class="time-label">Hari</div>
+          </div>
+          <div class="time-segment">
+            <div class="time-value" id="val-hours">0</div>
+            <div class="time-label">Jam</div>
+          </div>
+          <div class="time-segment">
+            <div class="time-value" id="val-mins">0</div>
+            <div class="time-label">Menit</div>
+          </div>
+          <div class="time-segment">
+            <div class="time-value" id="val-secs">0</div>
+            <div class="time-label">Detik</div>
+          </div>
+        </div>
+
+        <div class="orbit-text">
+          Sudah <span id="days-summary">0</span> hari kita mengorbit bersama di alam semesta ini.<br>
+          Atur ulang tanggal jadian kita di bawah ini jika berubah:<br>
+          <input type="date" id="anniversary-date" style="margin-top:10px; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--neon-pink); background: rgba(0,0,0,0.5); color: #fff; outline:none; text-align:center;">
+        </div>
+      </section>
+
+      <!-- PANEL 2: RADAR CINTA -->
+      <section class="panel" id="panel-radar">
+        <div class="radar-box">
+          <div class="radar-sweep"></div>
+          <div class="radar-heart" id="radarHeart">🛸</div>
+        </div>
+
+        <div class="radar-inputs">
+          <div class="input-group">
+            <input type="text" id="name1" class="radar-input" placeholder="Nama Kamu (contoh: Cowok Terganteng)" required>
+          </div>
+          <div class="input-group">
+            <input type="text" id="name2" class="radar-input" placeholder="Nama Pacar Kamu" required>
+          </div>
+          <button class="calc-btn" onclick="calculateAttraction()">Pindai Kekuatan Gravitasi Cinta</button>
+        </div>
+
+        <div class="radar-result" id="radarResult">
+          Memindai kecocokan orbit...
+        </div>
+      </section>
+
+      <!-- PANEL 3: TRANSMISI RAHASIA -->
+      <section class="panel" id="panel-secret">
+        <div class="console-box">
+          <div class="console-header">
+            <div class="console-dots">
+              <span class="console-dot dot-red"></span>
+              <span class="console-dot dot-yellow"></span>
+              <span class="console-dot dot-green"></span>
+            </div>
+            <div class="console-title">Love Decryption Terminal</div>
+            <div></div>
+          </div>
+          
+          <div class="console-body" id="consoleBody">
+            <div class="console-line">SYSTEM: Mendeteksi transmisi rahasia terenkripsi dari satelit...</div>
+            <div class="console-line" style="color: #ff5555;">SYSTEM: Diperlukan kata sandi dekripsi.</div>
+            <div class="console-line" style="color: #a9b1d6; font-style: italic;">Petunjuk: Panggilan sayang kamu ke pacar (contoh: sayang, nana, manis).</div>
+            
+            <form class="decryption-form" onsubmit="decryptMessage(event)" id="decryptForm">
+              <input type="text" id="decryptPass" class="decrypt-input" placeholder="Masukkan kata sandi..." autocomplete="off">
+              <button type="submit" class="decrypt-btn">DEKRIPSI</button>
+            </form>
+
+            <div class="console-output" id="consoleOutput"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL 4: ARCADE (LOVE ROCKET MINIGAME) -->
+      <section class="panel" id="panel-arcade">
+        <div class="game-container">
+          <!-- Game Canvas -->
+          <canvas id="gameCanvas" width="480" height="300"></canvas>
+          
+          <!-- Start / Game Over Screen Overlay -->
+          <div class="game-overlay" id="gameOverlay">
+            <h3 id="overlayTitle">USS Bucin Arcade 🚀</h3>
+            <p id="overlayDesc">
+              Kemudikan pesawat cintamu! Tangkap bintang hati (💖) sebanyak-banyaknya.<br>
+              Hindari asteroid batu (🪨) yang mengganggu jalinan asmara.<br>
+              Gunakan panah kiri/kanan, klik/sentuh layar, atau geser mouse.
+            </p>
+            <button class="start-game-btn" onclick="startGame()">Mulai Terbang!</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Interactive Floating Astronaut -->
+  <div class="astronaut-wrapper" id="astro" onclick="clickAstro()">
+    <div class="astronaut-bubble" id="astroBubble">Halo manis! Klik aku untuk melakukan akrobat salto luar angkasa! 🪐</div>
+    <svg viewBox="0 0 120 120" width="100%" height="100%">
+      <!-- Space Suit -->
+      <rect x="35" y="45" width="50" height="50" rx="16" fill="#ffffff" stroke="#ff79c6" stroke-width="3"/>
+      <!-- Suit Details -->
+      <rect x="43" y="53" width="34" height="24" rx="8" fill="#f1f2f6" stroke="#bd93f9" stroke-width="2"/>
+      <!-- Heart chest badge -->
+      <path d="M60 69 C60 69, 57 65, 55 65 C53.5 65, 52 66.5, 52 68.5 C52 71, 60 75, 60 75 C60 75, 68 71, 68 68.5 C68 66.5, 66.5 65, 65 65 C63 65, 60 69, 60 69 Z" fill="#ff5555"/>
+      
+      <!-- Waving Left Arm -->
+      <path d="M35 55 C22 45, 12 30, 15 22 C18 14, 28 26, 36 46" fill="#ffffff" stroke="#ff79c6" stroke-width="3" stroke-linecap="round"/>
+      
+      <!-- Right Arm -->
+      <path d="M85 55 C95 62, 100 70, 97 78 C94 86, 85 80, 85 72" fill="#ffffff" stroke="#ff79c6" stroke-width="3" stroke-linecap="round"/>
+      
+      <!-- Left Leg -->
+      <rect x="42" y="93" width="14" height="15" rx="5" fill="#ffffff" stroke="#ff79c6" stroke-width="3"/>
+      <rect x="42" y="103" width="14" height="5" fill="#bd93f9"/>
+      
+      <!-- Right Leg -->
+      <rect x="64" y="93" width="14" height="15" rx="5" fill="#ffffff" stroke="#ff79c6" stroke-width="3"/>
+      <rect x="64" y="103" width="14" height="5" fill="#bd93f9"/>
+
+      <!-- Helmet -->
+      <circle cx="60" cy="32" r="24" fill="#ffffff" stroke="#ff79c6" stroke-width="3"/>
+      
+      <!-- Visor -->
+      <path d="M42 32 C42 21, 78 21, 78 32 C78 40, 42 40, 42 32 Z" fill="#282a36" stroke="#8be9fd" stroke-width="2"/>
+      
+      <!-- Helmet Reflection Light -->
+      <path d="M48 26 A 12 12 0 0 1 65 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+      
+      <!-- Little Antenna -->
+      <line x1="60" y1="8" x2="60" y2="3" stroke="#bd93f9" stroke-width="3"/>
+      <circle cx="60" cy="2" r="2.5" fill="#ff5555"/>
+    </svg>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
