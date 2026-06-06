@@ -14,12 +14,28 @@
   <!-- Starfield Canvas Background -->
   <canvas id="starCanvas"></canvas>
 
-  <!-- Audio Toggle Control Button -->
-  <div class="audio-ctrl" id="audioBtn" title="Nyalakan Musik Synth Cinta">
-    <svg viewBox="0 0 24 24" id="audioIcon">
-      <!-- Mute Icon initially -->
-      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-8 5.77H2v6h4l5 5V4L6 9z"/>
+  <!-- Hidden YouTube IFrame Player -->
+  <div id="ytPlayerWrapper" style="position:fixed;bottom:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;opacity:0;" aria-hidden="true">
+    <div id="ytPlayer"></div>
+  </div>
+
+  <!-- Music Control Button -->
+  <div class="audio-ctrl" id="audioBtn" title="Putar Musik Latar 🎵">
+    <div class="music-visualizer" id="musicViz">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <svg viewBox="0 0 24 24" id="audioIcon" class="icon-play">
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
     </svg>
+  </div>
+
+  <!-- Music Info Toast -->
+  <div class="music-toast" id="musicToast">
+    <span class="music-note-anim">🎵</span>
+    <div class="music-toast-text">
+      <div class="music-toast-title">Musik Latar Aktif</div>
+      <div class="music-toast-sub" id="musicToastSub">Memutar lagu untukmu...</div>
+    </div>
   </div>
 
   <!-- Header -->
@@ -284,6 +300,8 @@
     </svg>
   </div>
 
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="script.js"></script>
 </body>
 </html>

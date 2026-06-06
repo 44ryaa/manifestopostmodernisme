@@ -5,11 +5,13 @@
 // Active tab
 let activeTab = 'orbit';
 
-// Initialize audio variables
-let audioCtx = null;
-let bgSynthNode = null;
-let ambientInterval = null;
+// YouTube Player
+let ytPlayer = null;
 let isPlayingAudio = false;
+const YT_VIDEO_ID = 'HxR32xRuLM0';
+
+// Web Audio API (masih dipakai untuk efek suara UI kecil)
+let audioCtx = null;
 
 // Custom transmission variables
 let customDecryptionKey = null;
@@ -191,15 +193,93 @@ function updateTimer() {
 setInterval(updateTimer, 1000);
 updateTimer();
 
-// iOS Safari Web Audio API Unlock mechanism
-function unlockAudioContext() {
-  initAudio();
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
+// =======================================================
+// YOUTUBE MUSIC PLAYER
+// =======================================================
+
+// Callback dipanggil otomatis saat YouTube IFrame API siap
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('ytPlayer', {
+    videoId: YT_VIDEO_ID,
+    playerVars: {
+      autoplay: 0,
+      loop: 1,
+      playlist: YT_VIDEO_ID,
+      controls: 0,
+      disablekb: 1,
+      fs: 0,
+      iv_load_policy: 3,
+      modestbranding: 1,
+      rel: 0,
+    },
+    events: {
+      onReady: onYTPlayerReady,
+      onStateChange: onYTPlayerStateChange,
+    }
+  });
+}
+
+function onYTPlayerReady(event) {
+  // Player siap, set volume ke 70%
+  event.target.setVolume(70);
+}
+
+function onYTPlayerStateChange(event) {
+  const btn = document.getElementById('audioBtn');
+  if (!btn) return;
+
+  // YT.PlayerState.PLAYING = 1
+  if (event.data === 1) {
+    isPlayingAudio = true;
+    btn.classList.add('playing');
+    btn.title = 'Pause Musik';
+    showMusicToast('Musik sedang diputar 🎶');
+  } else if (event.data === 2 || event.data === 0) {
+    // PAUSED = 2, ENDED = 0
+    isPlayingAudio = false;
+    btn.classList.remove('playing');
+    btn.title = 'Putar Musik Latar 🎵';
   }
 }
+
+function toggleYTMusic() {
+  if (!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') {
+    showMusicToast('Player belum siap, coba lagi...');
+    return;
+  }
+
+  const state = ytPlayer.getPlayerState();
+
+  if (state === 1) {
+    // Sedang main → pause
+    ytPlayer.pauseVideo();
+  } else {
+    // Tidak main → play
+    ytPlayer.playVideo();
+  }
+  playSynthTone(440, 'sine', 0.05, 0.1);
+}
+
+// Pasang event ke tombol audio
+const audioBtnEl = document.getElementById('audioBtn');
+if (audioBtnEl) {
+  audioBtnEl.addEventListener('click', toggleYTMusic);
+}
+
+function showMusicToast(msg) {
+  const toast = document.getElementById('musicToast');
+  const sub   = document.getElementById('musicToastSub');
+  if (!toast) return;
+  if (sub) sub.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// iOS Safari: pastikan audio bisa jalan setelah interaksi pertama
 ['click', 'touchstart'].forEach(type => {
-  window.addEventListener(type, unlockAudioContext, { once: true });
+  window.addEventListener(type, () => {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }, { once: true });
 });
 
 // =======================================================
@@ -443,134 +523,34 @@ function clickAstro() {
   }, 6500);
 }
 
+
 // =======================================================
-// WEB AUDIO API SYNTHESIZER
+// WEB AUDIO API — Hanya untuk efek UI kecil (bukan musik latar)
 // =======================================================
 
 function initAudio() {
   if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-
-// Play procedurally generated beep/tone
-function playSynthTone(freq, type = 'sine', vol = 0.1, duration = 0.5) {
   try {
-    initAudio();
-    if (!audioCtx) return;
-    
-    // Create nodes
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-    
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    
-    // Filter out harsh highs for space aesthetic
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
-    
-    // Volume envelope
-    gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    
-    // Connect
-    osc.connect(filter);
-    filter.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-  } catch (err) {
-    console.error("Audio synth error:", err);
-  }
-}
-
-// Background space music chords generator
-function startAmbientMusic() {
-  initAudio();
-  if (!audioCtx) return;
-  
-  isPlayingAudio = true;
-  document.getElementById('audioBtn').classList.add('playing');
-  document.getElementById('audioIcon').innerHTML = `
-    <!-- Unmute Wave icon -->
-    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h6V3h-6z" fill="#ff79c6"/>
-  `;
-
-  // Chords progression (Frequencies): Cmaj7, Am9, Fmaj7, G11
-  const progressions = [
-    [130.81, 164.81, 196.00, 246.94], // Cmaj7 (C3, E3, G3, B3)
-    [110.00, 146.83, 164.81, 220.00], // Am9 (A2, D3, E3, A3)
-    [87.31, 130.81, 174.61, 220.00],  // Fmaj7 (F2, C3, F3, A3)
-    [98.00, 146.83, 196.00, 246.94]   // G11 (G2, D3, G3, B3)
-  ];
-  
-  let chordIndex = 0;
-  
-  function playNextChord() {
-    if (!isPlayingAudio) return;
-    const chord = progressions[chordIndex];
-    
-    chord.forEach((noteFreq, idx) => {
-      // Stagger notes slightly for arpeggio feel
-      setTimeout(() => {
-        if (!isPlayingAudio) return;
-        playCosmicPadNote(noteFreq, 4.0);
-      }, idx * 150);
-    });
-    
-    chordIndex = (chordIndex + 1) % progressions.length;
-  }
-  
-  playNextChord();
-  ambientInterval = setInterval(playNextChord, 6000);
-}
-
-function playCosmicPadNote(freq, duration) {
-  try {
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    const filter = audioCtx.createBiquadFilter();
-    
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(600, audioCtx.currentTime);
-    
-    // Slow attack and decay envelope
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 1.5);
-    gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime + duration - 1.5);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    
-    osc.connect(filter);
-    filter.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   } catch(e) {}
 }
 
-function stopAmbientMusic() {
-  isPlayingAudio = false;
-  clearInterval(ambientInterval);
-  document.getElementById('audioBtn').classList.remove('playing');
-  document.getElementById('audioIcon').innerHTML = `
-    <!-- Mute Icon -->
-    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-8 5.77H2v6h4l5 5V4L6 9z" fill="#8be9fd"/>
-  `;
+function playSynthTone(freq, type = 'sine', vol = 0.07, duration = 0.3) {
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    const osc      = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch (err) {}
 }
-
-document.getElementById('audioBtn').addEventListener('click', () => {
-  if (isPlayingAudio) {
-    stopAmbientMusic();
-  } else {
-    startAmbientMusic();
-  }
-});
 
 // =======================================================
 // LOVE ROCKET CANVAS 2D MINIGAME
